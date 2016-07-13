@@ -2606,6 +2606,14 @@ class basic_json
             assert(m_value.string != nullptr);
             return *m_value.string;
         }
+        else if (is_number_integer())
+        {
+            return std::to_string(m_value.number_integer);
+        }
+        else if (is_number_float())
+        {
+            return std::to_string(m_value.number_float);
+        }
         else
         {
             throw std::domain_error("type must be string, but is " + type_name());
@@ -2634,6 +2642,11 @@ class basic_json
             case value_t::number_float:
             {
                 return static_cast<T>(m_value.number_float);
+            }
+
+            case value_t::string:
+            {
+                return static_cast<T>(std::atof(m_value.string->c_str()));
             }
 
             default:
@@ -3592,7 +3605,7 @@ class basic_json
         {
             // if key is found, return value and given default value otherwise
             const auto it = find(key);
-            if (it != end())
+            if (it != end() && !it->is_null())
             {
                 return *it;
             }
@@ -5753,6 +5766,11 @@ class basic_json
         return parser(i, cb).parse();
     }
 
+    static basic_json parse(const char* p, ssize_t l, parser_callback_t cb = nullptr)
+    {
+        return parser(p, l, cb).parse();
+    }
+
     /*!
     @brief deserialize from stream
 
@@ -7199,6 +7217,15 @@ class basic_json
             m_limit = m_content + m_buffer.size();
         }
 
+        explicit lexer(const char* s, ssize_t l) noexcept
+            : m_stream(nullptr), m_buffer(s, l)
+        {
+          m_content = reinterpret_cast<const lexer_char_t*>(m_buffer.c_str());
+          assert(m_content != nullptr);
+          m_start = m_cursor = m_content;
+          m_limit = m_content + m_buffer.size();
+        }
+
         /// default constructor
         lexer() = default;
 
@@ -8466,6 +8493,13 @@ basic_json_parser_63:
         /// a parser reading from an input stream
         parser(std::istream& _is, parser_callback_t cb = nullptr) noexcept
             : callback(cb), m_lexer(&_is)
+        {
+            // read first token
+            get_token();
+        }
+
+        parser(const char* s, ssize_t l, parser_callback_t cb = nullptr)
+            : callback(cb), m_lexer(s, l)
         {
             // read first token
             get_token();
