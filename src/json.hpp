@@ -4872,6 +4872,25 @@ class basic_json
         }
     }
 
+    void push_back(std::initializer_list<typename object_t::value_type> init)
+    {
+      // push_back only works for null objects or objects
+      if (not(m_type == value_t::null or m_type == value_t::object))
+      {
+        throw std::domain_error("cannot use push_back() with " + type_name());
+      }
+
+      // transform null object into an object
+      if (m_type == value_t::null)
+      {
+        m_type = value_t::object;
+        m_value = value_t::object;
+      }
+
+      // add element to array
+      m_value.object->insert(init);
+    }
+
     /*!
     @brief add an object to an object
     @copydoc push_back(std::initializer_list<basic_json>)
@@ -5766,7 +5785,7 @@ class basic_json
         return parser(i, cb).parse();
     }
 
-    static basic_json parse(const char* p, ssize_t l, parser_callback_t cb = nullptr)
+    static basic_json parse(const char* p, std::size_t l, parser_callback_t cb = nullptr)
     {
         return parser(p, l, cb).parse();
     }
@@ -7217,7 +7236,7 @@ class basic_json
             m_limit = m_content + m_buffer.size();
         }
 
-        explicit lexer(const char* s, ssize_t l) noexcept
+        explicit lexer(const char* s, std::size_t l) noexcept
             : m_stream(nullptr), m_buffer(s, l)
         {
           m_content = reinterpret_cast<const lexer_char_t*>(m_buffer.c_str());
@@ -8498,7 +8517,7 @@ basic_json_parser_63:
             get_token();
         }
 
-        parser(const char* s, ssize_t l, parser_callback_t cb = nullptr)
+        parser(const char* s, std::size_t l, parser_callback_t cb = nullptr)
             : callback(cb), m_lexer(s, l)
         {
             // read first token
@@ -8527,7 +8546,7 @@ basic_json_parser_63:
             {
                 case lexer::token_type::begin_object:
                 {
-                    if (keep and (not callback or (keep = callback(depth++, parse_event_t::object_start, result))))
+                    if (keep and (not callback or (((keep = callback(depth++, parse_event_t::object_start, result)) == true))))
                     {
                         // explicitly set result to object to cope with {}
                         result.m_type = value_t::object;
@@ -8605,7 +8624,7 @@ basic_json_parser_63:
 
                 case lexer::token_type::begin_array:
                 {
-                    if (keep and (not callback or (keep = callback(depth++, parse_event_t::array_start, result))))
+                    if (keep and (not callback or ((keep = callback(depth++, parse_event_t::array_start, result)) == true)))
                     {
                         // explicitly set result to object to cope with []
                         result.m_type = value_t::array;
