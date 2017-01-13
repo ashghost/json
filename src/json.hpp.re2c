@@ -6176,6 +6176,14 @@ class basic_json
     }
 
     /*!
+    @copydoc parse(IteratorType, IteratorType, const parser_callback_t)
+    */
+    static basic_json parse(const char* s, size_t l, const parser_callback_t cb = nullptr)
+    {
+        return parse(s, s + l, cb);
+    }
+
+    /*!
     @brief deserialize from a container with contiguous storage
 
     This function reads from a container with contiguous storage of 1-byte
