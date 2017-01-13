@@ -1,16 +1,32 @@
 json_unit
 json_benchmarks
-
 fuzz-testing
 
 *.dSYM
+*.o
+*.gcno
+*.gcda
 
 working
 
-html
+doc/xml
+doc/html
 me.nlohmann.json.docset
 
-android
-doc/xml
-
+benchmarks/files/numbers/*.json
 .vscode
+.idea
+cmake-build-debug
+
+
+test/test-*
+.svn
+
+test/thirdparty/Fuzzer/libFuzzer.a
+
+test/parse_afl_fuzzer
+
+test/parse_cbor_fuzzer
+
+test/parse_msgpack_fuzzer
+
